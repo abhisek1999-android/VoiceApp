@@ -155,13 +155,19 @@ public class MainActivity extends AppCompatActivity {
 
                     textToSpeech.speak("Correct",TextToSpeech.QUEUE_FLUSH,null,TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                     statusText.setText("Correct :)");
+                    statusText.setTextColor(Color.parseColor("#FF018786"));
+                    statusText.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.edittext_bg));
                 }else{
                     textToSpeech.speak("incorrect",TextToSpeech.QUEUE_FLUSH,null,TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+
                     statusText.setText("Incorrect :(");
                     statusText.setTextColor(Color.RED);
                     statusText.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.edittext_bg_red));
                 }}catch (Exception e){
                 textToSpeech.speak("incorrect",TextToSpeech.QUEUE_FLUSH,null,TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                statusText.setText("Incorrect :(");
+                statusText.setTextColor(Color.RED);
+                statusText.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.edittext_bg_red));
             }
 
         }
