@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    >
+
+    <!--To add text in the app-->
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Text"
+        android:layout_marginBottom="20dp"
+        android:text="2*2"
+        android:fontFamily="@font/poppins"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:inputType="number"
+        android:background="@drawable/edittext_bg"
+        android:padding="15dp"
+        android:textSize="50dp"/>
+
+    <!--when you press this button it will
+        convert text into speech-->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter an expression and play!!"
+        android:fontFamily="@font/poppins"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:id="@+id/btnText"
+        android:layout_height="wrap_content"
+        android:text="Play!!"
+        android:textAllCaps="false"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/poppins"
+        android:backgroundTint="@color/teal_700"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Correct :)"
+        android:background="@drawable/edittext_bg"
+        android:padding="10dp"
+        android:textColor="@color/teal_700"
+        android:fontFamily="@font/poppins"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        />
+
+</LinearLayout>
