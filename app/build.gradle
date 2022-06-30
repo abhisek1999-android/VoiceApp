@@ -8,7 +8,7 @@ android {
     defaultConfig {
         applicationId "com.abhi.seal.dt16062022.voiceapp"
         minSdk 23
-        targetSdk 32
+        targetSdk 30
         versionCode 1
         versionName "1.0"
 

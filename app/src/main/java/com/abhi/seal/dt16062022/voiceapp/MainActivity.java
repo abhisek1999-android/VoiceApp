@@ -4,15 +4,21 @@ import static androidx.core.content.PackageManagerCompat.LOG_TAG;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -47,7 +53,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     private static final int REQUEST_CODE_SPEECH_INPUT = 1;
     int count=0;
     Boolean performAc=false;
-    @Override
+    private AudioManager mAudioManager;
+    private int mStreamVolume = 0;
+    String result="";
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -61,7 +69,14 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         evaluateString = new EvaluateString();
         //multiplyNumbers("4");
 
+        checkAudioPermission();
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
+        amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
+        amanager.setStreamMute(AudioManager.STREAM_ALARM, false);
+        amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        amanager.setStreamMute(AudioManager.STREAM_RING, false);
+        amanager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
         progressBar.setVisibility(View.INVISIBLE);
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         speech.setRecognitionListener(this);
@@ -80,7 +95,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = textToSpeech.setLanguage(Locale.ENGLISH);
-
                     if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Log.i("TextToSpeech", "Language Not Supported");
                     }
@@ -89,6 +103,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
                         @Override
                         public void onStart(String utteranceId) {
                             Log.i("TextToSpeech", "On Start");
+                            speech.stopListening();
+
                         }
 
                         @Override
@@ -99,10 +115,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
                             handler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    isActive=true;
                                     takeVcIp();
                                 }
-                            }, 300);
+                            }, 500);
 
 
                         }
@@ -122,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         btnText.setOnClickListener(view -> {
             //       startActivity(new Intent(getApplicationContext(),VoiceDetect.class));
             try {
-                performAction();
+                performAction(true);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -132,9 +147,13 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     }
 
 
-    void performAction() throws InterruptedException {
+    void performAction(boolean isGen) throws InterruptedException {
+        if (isGen){
             sampleText.setText(generateSyntax());
             quesNum.setText((count+1)+"");
+        }
+
+
             if (!sampleText.getText().toString().equals("")) {
                 speak(sampleText.getText().toString(),"q");
 
@@ -167,11 +186,12 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             amanager.setStreamMute(AudioManager.STREAM_SYSTEM, true);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.setIndeterminate(true);
+            textGot.setText("Speak Now");
             speech.startListening(recognizerIntent);
-
 
         }
         else {
+            speech.stopListening();
             progressBar.setIndeterminate(false);
             progressBar.setVisibility(View.INVISIBLE);
         }
@@ -285,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         amanager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
         textToSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
 
+
        // Thread.sleep(1000);
 
         final Handler handler = new Handler(Looper.getMainLooper());
@@ -295,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
                 if (ans.equals("ans")){
                     if (count<10){
                         try {
-                            performAction();
+                            performAction(true);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -311,10 +332,14 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             }
         }, 3000);
 
+    }
 
-
-
-
+    private void checkAudioPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  // M = 23
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+            }
+        }
     }
 
 
@@ -348,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         Log.i("LOG_TAG", "onEndOfSpeech");
         progressBar.setIndeterminate(true);
 
-       isActive=false;
+        isActive=false;
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
@@ -364,7 +389,15 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
         String errorMessage = getErrorText(i);
         Log.d("LOG_TAG", "FAILED " + errorMessage);
-       textGot.setText(errorMessage);
+        if (i==SpeechRecognizer.ERROR_NO_MATCH){
+            try {
+                performAction(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // textGot.setText(errorMessage);
 //        toggleButton.setChecked(false);
     }
 
@@ -372,17 +405,17 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     public void onResults(Bundle bundle) {
 
         Log.i("LOG_TAG", "onPartialResults");
-        ArrayList<String> matches = bundle
-                .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        String text = "";
-        for (String result : matches)
-            text += result + "\n";
-        textGot.setText(text);
+
         try {
-            multiplyNumbers(text);
-        } catch (InterruptedException e) {
+
+            textGot.setText(result);
+            multiplyNumbers(result);
+
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
     }
 
@@ -394,6 +427,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         String text = "";
         for (String result : matches)
             text += result + "\n";
+       result=text;
+
 
     }
 
@@ -437,5 +472,29 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
                 break;
         }
         return message;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
+        amanager.setStreamMute(AudioManager.STREAM_ALARM, false);
+        amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        amanager.setStreamMute(AudioManager.STREAM_RING, false);
+        amanager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
+        amanager.setStreamMute(AudioManager.STREAM_ALARM, false);
+        amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        amanager.setStreamMute(AudioManager.STREAM_RING, false);
+        amanager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
     }
 }
